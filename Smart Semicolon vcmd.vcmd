@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SerializableSnippets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <commands />
+  <extensions>
+    <Snippet>
+      <id>2</id>
+      <name>Smart Semicolon</name>
+      <code>using System.Linq;
+public class E : VisualCommanderExt.IExtension
+{
+	private string[] DocExtensions = { ".cs", ".js", ".c", ".cpp", ".h" ,".wsf" };
+	private EnvDTE80.DTE2 DTE;
+	private EnvDTE80.TextDocumentKeyPressEvents textDocKeyEvents;
+	private bool pontoVirgula = false;
+	private int colunaPontoVirgula, linhaPontoVirgula, colunaAtual;
+
+	public void SetSite(EnvDTE80.DTE2 DTE_, Microsoft.VisualStudio.Shell.Package package)
+	{
+		DTE = DTE_;
+		EnvDTE80.Events2 events = (EnvDTE80.Events2)DTE.Events;
+		textDocKeyEvents = events.get_TextDocumentKeyPressEvents(null);
+		textDocKeyEvents.BeforeKeyPress += new EnvDTE80._dispTextDocumentKeyPressEvents_BeforeKeyPressEventHandler(BeforeKeyPress);
+	}
+	public void Close() {
+		textDocKeyEvents.BeforeKeyPress -= BeforeKeyPress;
+	}
+
+	private void BeforeKeyPress(string Keypress, EnvDTE.TextSelection Selection, bool InStatementCompletion, ref bool CancelKeypress)
+	{
+		if (Keypress == ";")
+		{
+			string nomeArquivo = Selection.Parent.Parent.Name;
+			if (DocExtensions.Any(x =&gt; nomeArquivo.EndsWith(x)))
+			{
+				bool isEndOfLine = false;
+				if (linhaPontoVirgula != Selection.ActivePoint.Line)
+				{ 
+					pontoVirgula = false;
+					linhaPontoVirgula = Selection.ActivePoint.Line;
+				}
+				if (Selection.ActivePoint.LineCharOffset != colunaAtual)
+				{ 
+					pontoVirgula = false;
+					colunaAtual = Selection.ActivePoint.LineCharOffset;
+					isEndOfLine = Selection.ActivePoint.AtEndOfLine;
+				}
+
+				CancelKeypress = true;
+				colunaPontoVirgula = Selection.ActivePoint.LineCharOffset; 
+
+				DTE.UndoContext.Open("ponto virgula", false);
+
+				Selection.EndOfLine(false);
+				Selection.CharLeft(true);
+				if (Selection.Text != ";")                  
+
+				{
+					Selection.CharRight(false);
+					Selection.Insert(";");
+					if (!isEndOfLine)
+					{
+						Selection.MoveToLineAndOffset(linhaPontoVirgula, colunaPontoVirgula);
+					}
+
+					pontoVirgula = true;
+				}
+				else if (!Selection.ActivePoint.AtEndOfLine)
+				{
+					Selection.CharRight(false);
+					Selection.MoveToLineAndOffset(linhaPontoVirgula, colunaPontoVirgula);
+					Selection.Insert(";");
+					pontoVirgula = false;
+				}
+
+				DTE.UndoContext.Close();
+				colunaAtual = Selection.ActivePoint.LineCharOffset;
+				isEndOfLine = Selection.ActivePoint.AtEndOfLine;
+			}
+		}
+		else if (Keypress == "\b") // Backspace  
+		{
+			if (pontoVirgula)                
+			{
+				if ((Selection.ActivePoint.Line == linhaPontoVirgula) &amp;&amp; (Selection.ActivePoint.LineCharOffset == colunaAtual))
+				{
+					CancelKeypress = true;
+					DTE.ActiveDocument.Undo();
+					DTE.UndoContext.Open("Virgula", false);
+
+					//Selection.ActivePoint.CreateEditPoint().Delete(-1);
+					Selection.MoveToLineAndOffset(linhaPontoVirgula, colunaPontoVirgula, false);
+					Selection.Insert(";", (int)EnvDTE.vsInsertFlags.vsInsertFlagsCollapseToEnd);
+
+					DTE.UndoContext.Close();
+				}
+			}
+			pontoVirgula = false;
+		}
+		else pontoVirgula = false;
+	}
+}</code>
+      <referencedAssemblies />
+      <type>Extension</type>
+      <lang>CS</lang>
+      <langVersion>v4.0</langVersion>
+      <enabled>true</enabled>
+      <includeDebugInformation>false</includeDebugInformation>
+    </Snippet>
+  </extensions>
+  <commonCode />
+</SerializableSnippets>
