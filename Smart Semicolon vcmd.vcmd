@@ -9,6 +9,7 @@
 public class E : VisualCommanderExt.IExtension
 {
 	private string[] DocExtensions = { ".cs", ".js", ".c", ".cpp", ".h" ,".wsf" };
+	private bool formatOnSemicolon = true;
 	private EnvDTE80.DTE2 DTE;
 	private EnvDTE80.TextDocumentKeyPressEvents textDocKeyEvents;
 	private bool pontoVirgula = false;
@@ -76,11 +77,13 @@ public class E : VisualCommanderExt.IExtension
 				colunaAtual = Selection.ActivePoint.LineCharOffset;
 				isEndOfLine = Selection.ActivePoint.AtEndOfLine;
 			}
+			if (formatOnSemicolon) DTE.ExecuteCommand("Edit.FormatSelection");
 		}
 		else if (Keypress == "\b") // Backspace  
 		{
 			if (pontoVirgula)                
 			{
+				if (formatOnSemicolon) DTE.ActiveDocument.Undo();
 				if ((Selection.ActivePoint.Line == linhaPontoVirgula) &amp;&amp; (Selection.ActivePoint.LineCharOffset == colunaAtual))
 				{
 					CancelKeypress = true;
