@@ -83,18 +83,21 @@ public class E : VisualCommanderExt.IExtension
 		{
 			if (pontoVirgula)                
 			{
-				if (formatOnSemicolon) DTE.ActiveDocument.Undo();
-				if ((Selection.ActivePoint.Line == linhaPontoVirgula) &amp;&amp; (Selection.ActivePoint.LineCharOffset == colunaAtual))
+				if (Selection.ActivePoint.Line == linhaPontoVirgula)
 				{
-					CancelKeypress = true;
-					DTE.ActiveDocument.Undo();
-					DTE.UndoContext.Open("Virgula", false);
+					if (formatOnSemicolon) DTE.ActiveDocument.Undo();
+					if (Selection.ActivePoint.LineCharOffset == colunaAtual)
+					{
+						CancelKeypress = true;
+						DTE.ActiveDocument.Undo();
+						DTE.UndoContext.Open("Virgula", false);
 
-					//Selection.ActivePoint.CreateEditPoint().Delete(-1);
-					Selection.MoveToLineAndOffset(linhaPontoVirgula, colunaPontoVirgula, false);
-					Selection.Insert(";", (int)EnvDTE.vsInsertFlags.vsInsertFlagsCollapseToEnd);
+						//Selection.ActivePoint.CreateEditPoint().Delete(-1);
+						Selection.MoveToLineAndOffset(linhaPontoVirgula, colunaPontoVirgula, false);
+						Selection.Insert(";", (int)EnvDTE.vsInsertFlags.vsInsertFlagsCollapseToEnd);
 
-					DTE.UndoContext.Close();
+						DTE.UndoContext.Close();
+					}
 				}
 			}
 			pontoVirgula = false;
