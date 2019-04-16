@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <SerializableSnippets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <commands />
   <extensions>
@@ -6,10 +6,12 @@
       <id>2</id>
       <name>Smart Semicolon</name>
       <code>using System.Linq;
+using System.Text.RegularExpressions;
 public class E : VisualCommanderExt.IExtension
 {
 	private string[] DocExtensions = { ".cs", ".js", ".c", ".cpp", ".h" ,".wsf" };
 	private bool formatOnSemicolon = true;
+	private static readonly string EXCLUDED_EXPRESSIONS = @"^.*(for|switch).*(.*";
 	private EnvDTE80.DTE2 DTE;
 	private EnvDTE80.TextDocumentKeyPressEvents textDocKeyEvents;
 	private bool pontoVirgula = false;
@@ -33,49 +35,54 @@ public class E : VisualCommanderExt.IExtension
 			string nomeArquivo = Selection.Parent.Parent.Name;
 			if (DocExtensions.Any(x =&gt; nomeArquivo.EndsWith(x)))
 			{
-				bool isEndOfLine = false;
-				if (linhaPontoVirgula != Selection.ActivePoint.Line)
-				{ 
-					pontoVirgula = false;
-					linhaPontoVirgula = Selection.ActivePoint.Line;
-				}
-				if (Selection.ActivePoint.LineCharOffset != colunaAtual)
-				{ 
-					pontoVirgula = false;
+				var editPoint = Selection.ActivePoint.CreateEditPoint();
+				int lineNumber = Selection.ActivePoint.Line;
+				string lineText = editPoint.GetLines(lineNumber, lineNumber+1);
+				if (!Regex.IsMatch(lineText, EXCLUDED_EXPRESSIONS))
+				{
+					bool isEndOfLine = false;
+					if (linhaPontoVirgula != Selection.ActivePoint.Line)
+					{ 
+						pontoVirgula = false;
+						linhaPontoVirgula = Selection.ActivePoint.Line;
+					}
+					if (Selection.ActivePoint.LineCharOffset != colunaAtual)
+					{ 
+						pontoVirgula = false;
+						colunaAtual = Selection.ActivePoint.LineCharOffset;
+						isEndOfLine = Selection.ActivePoint.AtEndOfLine;
+					}
+
+					CancelKeypress = true;
+					colunaPontoVirgula = Selection.ActivePoint.LineCharOffset; 
+
+					DTE.UndoContext.Open("ponto virgula", false);
+
+					Selection.EndOfLine(false);
+					Selection.CharLeft(true);
+					if (Selection.Text != ";")                  
+					{
+						Selection.CharRight(false);
+						Selection.Insert(";");
+						if (!isEndOfLine)
+						{
+							Selection.MoveToLineAndOffset(linhaPontoVirgula, colunaPontoVirgula);
+						}
+
+						pontoVirgula = true;
+					}
+					else if (!Selection.ActivePoint.AtEndOfLine)
+					{
+						Selection.CharRight(false);
+						Selection.MoveToLineAndOffset(linhaPontoVirgula, colunaPontoVirgula);
+						Selection.Insert(";");
+						pontoVirgula = false;
+					}
+
+					DTE.UndoContext.Close();
 					colunaAtual = Selection.ActivePoint.LineCharOffset;
 					isEndOfLine = Selection.ActivePoint.AtEndOfLine;
 				}
-
-				CancelKeypress = true;
-				colunaPontoVirgula = Selection.ActivePoint.LineCharOffset; 
-
-				DTE.UndoContext.Open("ponto virgula", false);
-
-				Selection.EndOfLine(false);
-				Selection.CharLeft(true);
-				if (Selection.Text != ";")                  
-
-				{
-					Selection.CharRight(false);
-					Selection.Insert(";");
-					if (!isEndOfLine)
-					{
-						Selection.MoveToLineAndOffset(linhaPontoVirgula, colunaPontoVirgula);
-					}
-
-					pontoVirgula = true;
-				}
-				else if (!Selection.ActivePoint.AtEndOfLine)
-				{
-					Selection.CharRight(false);
-					Selection.MoveToLineAndOffset(linhaPontoVirgula, colunaPontoVirgula);
-					Selection.Insert(";");
-					pontoVirgula = false;
-				}
-
-				DTE.UndoContext.Close();
-				colunaAtual = Selection.ActivePoint.LineCharOffset;
-				isEndOfLine = Selection.ActivePoint.AtEndOfLine;
 			}
 			if (formatOnSemicolon) DTE.ExecuteCommand("Edit.FormatSelection");
 		}
