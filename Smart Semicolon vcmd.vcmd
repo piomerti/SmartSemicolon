@@ -11,7 +11,7 @@ public class E : VisualCommanderExt.IExtension
 {
 	private string[] DocExtensions = { ".cs", ".js", ".c", ".cpp", ".h" ,".wsf" };
 	private bool formatOnSemicolon = true;
-	private const string EXCLUDED_EXPRESSIONS = @"^.*(for|switch).*(.*";
+	private const string EXCLUDED_EXPRESSIONS = @"^.*(for|switch).*\(.*";
 	private EnvDTE80.DTE2 DTE;
 	private EnvDTE80.TextDocumentKeyPressEvents textDocKeyEvents;
 	private bool pontoVirgula = false;
@@ -36,7 +36,7 @@ public class E : VisualCommanderExt.IExtension
 			if (DocExtensions.Any(x =&gt; nomeArquivo.EndsWith(x)))
 			{
 				var editPoint = Selection.ActivePoint.CreateEditPoint();
-				int lineNumber = Selection.ActivePoint.Line;
+				int lineNumber = editPoint.Line;
 				string lineText = editPoint.GetLines(lineNumber, lineNumber+1);
 				if (!Regex.IsMatch(lineText, EXCLUDED_EXPRESSIONS))
 				{
