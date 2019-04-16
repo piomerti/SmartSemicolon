@@ -11,7 +11,7 @@ public class E : VisualCommanderExt.IExtension
 {
 	private string[] DocExtensions = { ".cs", ".js", ".c", ".cpp", ".h" ,".wsf" };
 	private bool formatOnSemicolon = true;
-	private const string EXCLUDED_EXPRESSIONS = @"^\s*(for|switch).*\(.*";
+	private const string EXCLUDED_EXPRESSIONS = @"^.*(for|switch)\s*\(.*";
 	private EnvDTE80.DTE2 DTE;
 	private EnvDTE80.TextDocumentKeyPressEvents textDocKeyEvents;
 	private bool pontoVirgula = false;
